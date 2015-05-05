@@ -21,6 +21,7 @@ frecuencias = {'0':0,'0.1':0,'0.2':0,'0.3':0,'0.4':0,'0.5':0,'0.6':0,'0.7':0,'0.
 
 
 def intervalos(value):
+    """Deprecated"""
     if value >= 0 and value < 0.1:
         frecuencias['0']+= 1 
     if value >= 0.1 and value < 0.2:
