@@ -33,7 +33,7 @@ def generar_clientes(tiempo):
 class Evento(object):
     def __init__(self, objeto, tiempo, tipo):
         self.objeto = objeto
-        self.tiempo = int(tiempo)
+        self.tiempo = tiempo
         self.tipo = tipo
 
     def __str__(self):

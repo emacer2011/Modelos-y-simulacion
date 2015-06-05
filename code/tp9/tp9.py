@@ -16,7 +16,7 @@ T_CORRIDA = 120
 
 
 def main():
-    reloj = 0
+    reloj = 0.0
     for i in range(EXPERIMENTOS):
         tiempos_medios = []
         for j in range(CORRIDAS):
