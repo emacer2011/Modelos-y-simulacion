@@ -28,6 +28,7 @@ def es_cliente(objeto):
 def main():
     tams_cola = []
     f = open("log.txt", "w")
+    promedios = []
     for i in range(EXPERIMENTOS):
         tiempos_medios = []
         for j in range(CORRIDAS):
@@ -70,12 +71,12 @@ def main():
                     k = 0
                     reloj = max(reloj, e.tiempo)
                     eventos = eliminar_evento(eventos, e)
-    #print tiempos_medios
+        promedios.append(np.average(tiempos_medios))
     f.close()
-    media = np.average(tiempos_medios)
-    std = np.std(tiempos_medios)
-    inferior = np.average(tiempos_medios)-(std*1.96/math.sqrt(EXPERIMENTOS))
-    superior = np.average(tiempos_medios)+(std*1.96/math.sqrt(EXPERIMENTOS))
+    media = np.average(promedios)
+    std = np.std(promedios)
+    inferior = np.average(promedios)-(std*1.96/math.sqrt(EXPERIMENTOS))
+    superior = np.average(promedios)+(std*1.96/math.sqrt(EXPERIMENTOS))
     print "-"*20+"[Estadisticas]"+"-"*20
     print "Experimentos: %d" % (EXPERIMENTOS)
     print "Ejecuciones: %d" % (CORRIDAS)
@@ -87,6 +88,9 @@ def main():
     print "Maximo de clientes en cola: ", max(tams_cola)
     print "Utilizacion Servidor 1(%): NO CALCULADO"
     print "Utilizacion Servidor 2(%): NO CALCULADO"
+    #print promedios
+    hist(promedios, 5)
+    show()
 
 if __name__ == '__main__':
     main()
