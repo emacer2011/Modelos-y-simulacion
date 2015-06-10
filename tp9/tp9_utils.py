@@ -1,11 +1,5 @@
+from __future__ import division
 import numpy as np
-
-
-def generar_evento_llegada(eventos, clientes):
-    lista = []
-    for c in clientes:
-        lista = agregar_evento(lista, Evento(c, c.tiempo_llegada, 'llegada_cliente'))
-    return lista
 
 
 def agregar_evento(eventos, evento):
@@ -20,14 +14,10 @@ def eliminar_evento(eventos, evento):
     return eventos
 
 
-def generar_clientes(tiempo):
-    reloj = 0
-    lista = []
-    while(reloj <= tiempo):
-        reloj += np.random.exponential(10)
-        cliente = Cliente(reloj)
-        lista.append(cliente)
-    return lista
+def generar_cliente(reloj):
+    llegada = reloj + np.random.exponential(20)
+    cliente = Cliente(llegada)
+    return cliente
 
 
 class Evento(object):
@@ -65,6 +55,10 @@ class Cliente(object):
         self.tiempo_llegada = tiempo_llegada
         self.tiempo_atencion = 0
         self.tiempo_salida = 0
+
+    def generar_evento_llegada(self, eventos):
+        agregar_evento(eventos, Evento(self, self.tiempo_llegada, 'llegada_cliente'))
+        return eventos
 
     def tiempo_espera(self):
         return self.tiempo_atencion - self.tiempo_llegada

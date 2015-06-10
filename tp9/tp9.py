@@ -4,54 +4,65 @@ from __future__ import division
 import numpy as np
 import math
 from matplotlib.pylab import hist, show
-from tp9_utils import Servidor,\
+from tp9_utils_2 import Servidor,\
     agregar_evento,\
-    generar_clientes,\
-    generar_evento_llegada,\
+    generar_cliente,\
     eliminar_evento
 
-CORRIDAS = 1
-EXPERIMENTOS = 1
-T_CORRIDA = 120
+CORRIDAS = 100
+EXPERIMENTOS = 60
+T_CORRIDA = 15
 
+
+def mostrar(lista):
+    print "mostrando lista, largo: ", len(lista)
+    for item in lista:
+        print item
+
+def get_clientes_en_cola(eventos):
+    return len(filter(lambda e: es_cliente(e.objeto), eventos))
+
+def es_cliente(objeto):
+    return "Cliente" == objeto.__class__.__name__.title()
 
 def main():
-    reloj = 0.0
+    tams_cola = []
+    f = open("log.txt", "w")
+    promedios = []
     for i in range(EXPERIMENTOS):
         tiempos_medios = []
         for j in range(CORRIDAS):
-            print "-"*20
             eventos = []
-            clientes = generar_clientes(T_CORRIDA)
-            eventos.extend(generar_evento_llegada(eventos, clientes))
-            # f = open("eventos_iniciales.txt", "w")
-            # for e in eventos:
-            #     f.write(e.__str__()+'\n')
-            # f.close()
             serv_1 = Servidor(np.random.normal(15, 3))
             serv_2 = Servidor(np.random.exponential(12))
             servidores = [serv_1, serv_2]
             k = 0
-            while (len(eventos) > 0):
+            reloj = 0.0
+            while (reloj <= T_CORRIDA):
+                cliente = generar_cliente(reloj)
+                eventos = cliente.generar_evento_llegada(eventos)
                 e = eventos[k]
                 if e.tipo == "llegada_cliente":
                     atendido = False
                     for s in servidores:
                         if not s.ocupado:
-                            #print "Servidor: %s atiendo a Cliente: %s" % (s.id, e.objeto.id)
-                            eventos = s.atender(eventos, e.objeto, reloj)
+                            if reloj < e.objeto.tiempo_llegada:
+                                eventos = s.atender(eventos, e.objeto, e.objeto.tiempo_llegada)
+                            else:
+                                eventos = s.atender(eventos, e.objeto, reloj)
                             eventos = eliminar_evento(eventos, e)
                             atendido = True
                             break
                     if atendido:
                         k = 0
                         reloj = max(reloj, e.tiempo)
-                        #print "Atendido! - reloj", reloj
+                        clientes_en_cola = get_clientes_en_cola(eventos)
+                        f.write("(E: %d,C: %d) Reloj %.5f | Clientes en cola: %d\n" % (i, j, reloj, clientes_en_cola))
+                        tams_cola.append(clientes_en_cola)
                     else:
                         k += 1
-                        #print "%s no me atendieron" % e
                 elif e.tipo == "inicio_atencion":
-                    print "tiempo llegada: %d, tiempo atencion: %s" % (e.objeto.tiempo_llegada, e.objeto.tiempo_atencion)
+                    #print "tiempo llegada: %.5f, tiempo atencion: %s" % (e.objeto.tiempo_llegada, e.objeto.tiempo_atencion)
                     tiempos_medios.append(e.objeto.tiempo_espera())
                     reloj = max(reloj, e.tiempo)
                     eventos = eliminar_evento(eventos, e)
@@ -60,16 +71,26 @@ def main():
                     k = 0
                     reloj = max(reloj, e.tiempo)
                     eventos = eliminar_evento(eventos, e)
-                    # f = open("eventos_finales.txt", "w")
-                    # for e in eventos:
-                    #     f.write(e.__str__()+'\n')
-                    # f.close()
-
-    print tiempos_medios
-    media = np.average(tiempos_medios)
-    std = np.std(tiempos_medios)
-    print "media: %.2f" % media
-    print "std: %.2f" % std
+        promedios.append(np.average(tiempos_medios))
+    f.close()
+    media = np.average(promedios)
+    std = np.std(promedios)
+    inferior = np.average(promedios)-(std*1.96/math.sqrt(EXPERIMENTOS))
+    superior = np.average(promedios)+(std*1.96/math.sqrt(EXPERIMENTOS))
+    print "-"*20+"[Estadisticas]"+"-"*20
+    print "Experimentos: %d" % (EXPERIMENTOS)
+    print "Ejecuciones: %d" % (CORRIDAS)
+    print "Tiempo/corrida: %d" % (T_CORRIDA)
+    print "Tiempo promedio de espera en cola: %.2f" % media
+    print "Desvio estandar: %.2f" % std
+    print "Intervalo de confianza (95%%): %.3f < u < %.3f" % (inferior, superior)
+    print "-"*20+"[Otros]"+"-"*20
+    print "Maximo de clientes en cola: ", max(tams_cola)
+    print "Utilizacion Servidor 1(%): NO CALCULADO"
+    print "Utilizacion Servidor 2(%): NO CALCULADO"
+    #print promedios
+    hist(promedios, 5)
+    show()
 
 if __name__ == '__main__':
     main()
