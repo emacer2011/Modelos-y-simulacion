@@ -86,14 +86,10 @@ def main():
     print "Intervalo de confianza (95%%): %.3f < u < %.3f" % (inferior, superior)
     print "-"*20+"[Otros]"+"-"*20
     print "Maximo de clientes en cola: ", max(tams_cola)
-    print "Utilizacion Servidor 1(%): NO CALCULADO"
-    print "Utilizacion Servidor 2(%): NO CALCULADO"
-    #print promedios
+    print "Promedios"
+    print promedios
     hist(promedios, 5)
     show()
 
 if __name__ == '__main__':
     main()
-
-
-#data.sort(key=lambda tup: tup[1]) ordenar lista por tupla
