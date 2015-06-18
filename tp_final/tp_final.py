@@ -3,15 +3,14 @@
 from __future__ import division
 import numpy as np
 import math
-from matplotlib.pylab import hist, show
 from pizza import Gusto
 from llamada import Llamada
 from evento import Evento
 from reloj import *
 from camioneta import Camioneta
 
-CORRIDAS = 20
-EXPERIMENTOS = 10
+CORRIDAS = 10
+EXPERIMENTOS = 20
 LLAMADAS = 100
 MAX_DISTANCIA = 2000
 MAX_CAMIONETAS = 4
@@ -57,6 +56,8 @@ def crear_camionetas(gustos):
         c = Camioneta()
         camionetas.append(c)
         producidas.extend(c.cargar(gustos))
+        for p in c.pizzas:
+            print p.gusto.nombre
     return camionetas, producidas
 
 
@@ -95,6 +96,7 @@ def main():
     gustos = crear_gustos()
     for i in range(EXPERIMENTOS):
         for j in range(CORRIDAS):
+            print "E: %d, C: %d" % (i, j)
             llamados_perdidos = []
             llamados_rechazados = []
             pizzas_descartadas = []
@@ -153,7 +155,7 @@ def main():
                         if atendido:
                             eventos = eliminar_evento(eventos, eventos[k])
                         else:
-                            print "todas las camionetas estan ocupadas"
+                            print "llamado %d en espera" % (eventos[k].objeto.id)
                             k += 1
                 elif eventos[k].tipo == "atencion_pedido":
                     c = eventos[k].objeto
@@ -166,7 +168,7 @@ def main():
                     if c.llamada.timeout(reloj.get_reloj()):
                             eliminar_evento(eventos, eventos[k])
                             llamados_perdidos.append(c.llamada)
-                            print "llamada perdida por timeout"
+                            print "llamada %d perdida por timeout" % (c.llamada.id)
                             break
                     c.fin_atencion()
                     print "soy %d y entregue" % (c.id)
@@ -180,12 +182,11 @@ def main():
                     eventos = agregar_evento(eventos, Evento(c, reloj.get_reloj()+t_viaje+t_carga, "fin_recarga"))
                     eventos = eliminar_evento(eventos, eventos[k])
                 elif eventos[k].tipo == "fin_recarga":
+                    reloj = singleton(Reloj)
                     c = eventos[k].objeto
                     reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), eventos[k].tiempo))
-                    c.finalizar_carga(reloj.get_reloj())
+                    c.finalizar_carga(singleton(Reloj).get_reloj())
                     eventos = eliminar_evento(eventos, eventos[k])
-            print "fin corrida ", j
-        print "fin experimento ", i
 
 if __name__ == '__main__':
     main()

@@ -18,9 +18,9 @@ class Camioneta(object):
         self.llamada = None  # referencia al obj Llamada que atiende
         self.ultima_rec = 0
         if pizzas is None:
-            self.pizzas = list()
+            self.pizzas = []
         if tiempo_entre_rec is None:
-            self.tiempo_entre_rec = list()
+            self.tiempo_entre_rec = []
 
     def get_ubicacion(self):
         return self.ubicacion
@@ -49,8 +49,8 @@ class Camioneta(object):
         return pizza
 
     def quitar_pizzas_vencidas(self):
-        malas = (pizza for pizza in self.pizzas if pizza.get_estado() is False)  # Devuelve las que estan en mal estado
-        buenas = (pizza for pizza in self.pizzas if pizza.get_estado() is True)
+        malas = filter(lambda p: p.estado is False, self.pizzas)
+        buenas = filter(lambda p: p.estado is True, self.pizzas)
         self.pizzas = buenas
         return malas
 
@@ -71,10 +71,13 @@ class Camioneta(object):
         producidas = []
         self.ocupado = True
         malas = self.quitar_pizzas_vencidas()
-        pizza = self.agregar_pizza(gusto_principal)
+        if len(self.pizzas) == self.MAX_PIZZAS:
+            self.pizzas.remove(self.pizzas[0])
+            pizza = self.agregar_pizza(gusto_principal)
+            print "descarto porque estoy lleno"
         producidas.append(pizza)
         producidas.extend(self.cargar(gustos))
-        return np.random.Exponential(10), malas, producidas
+        return np.random.exponential(10), malas, producidas
 
     def tiene_gusto(self, gusto):
         for p in self.get_pizzas():
@@ -107,6 +110,6 @@ class Camioneta(object):
         return lista_gustos
 
     def finalizar_carga(self, reloj):
-        self.tiempo_entre_rec.append(reloj.get_reloj()-self.ultima_rec)
-        self.ultima_rec = reloj.get_reloj()
+        self.tiempo_entre_rec.append(reloj-self.ultima_rec)
+        self.ultima_rec = reloj
         self.ocupado = False
