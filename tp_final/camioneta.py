@@ -3,23 +3,24 @@
 from __future__ import division
 import math
 from pizza import Pizza
-from reloj import Reloj
+from reloj import *
 import numpy as np
 
 
 class Camioneta(object):
-    """docstring for Camioneta"""
-    def __init__(self):
-        super(Camioneta, self).__init__()
+    def __init__(self, pizzas=None, tiempo_entre_rec=None):
+        self.id = id(self)
         self.ocupado = False
         self.ubicacion = (0, 0)
         self.distancia_rec = 0
-        self.pizzas = {}
         self.VC_MAX = 500  # mts/min = 30km/h
         self.MAX_PIZZAS = 40
         self.llamada = None  # referencia al obj Llamada que atiende
-        self.tiempo_entre_rec = []
         self.ultima_rec = 0
+        if pizzas is None:
+            self.pizzas = list()
+        if tiempo_entre_rec is None:
+            self.tiempo_entre_rec = list()
 
     def get_ubicacion(self):
         return self.ubicacion
@@ -42,10 +43,10 @@ class Camioneta(object):
         return self.pizzas
 
     def agregar_pizza(self, gusto):
-        r = Reloj()
-        p = Pizza(gusto, r.get_valor())
-        self.pizzas[gusto].append(p)
-        return p
+        reloj = singleton(Reloj).get_reloj()
+        pizza = Pizza(gusto, reloj)
+        self.pizzas.append(pizza)
+        return pizza
 
     def quitar_pizzas_vencidas(self):
         malas = (pizza for pizza in self.pizzas if pizza.get_estado() is False)  # Devuelve las que estan en mal estado
@@ -53,21 +54,27 @@ class Camioneta(object):
         self.pizzas = buenas
         return malas
 
-    def cargar(self, gusto_principal, gustos):
-        """Devuelve el tiempo de carga y las pizzas en mal estado"""
+    def cargar(self, gustos):
         producidas = []
-        self.ocupado = True
-        malas = self.quitar_pizzas_vencidas()
-        pizza = self.agregar_pizza(gusto_principal)
-        producidas.append(pizza)
-        while len(self.get_pizzas()) < self.MAX_PIZZAS:
+        print "soy %d y tengo %d pizzas" % (self.id, len(self.pizzas))
+        while len(self.pizzas) < self.MAX_PIZZAS:
             key = np.random.randint(1, len(gustos))
             prob = np.random.binomial(1, gustos[key].get_probabilidad())
             if prob:
                 pizza = self.agregar_pizza(gustos[key])
                 producidas.append(pizza)
-                print "cargo pizza de gusto: %s", gustos[key].nombre
-        return np.random.Exponential(10), malas
+                #print "cargo pizza de gusto: ", gustos[key].nombre
+        return producidas
+
+    def recargar(self, gusto_principal, gustos):
+        """Devuelve el tiempo de carga, las pizzas en mal estado, las pizzas producidas"""
+        producidas = []
+        self.ocupado = True
+        malas = self.quitar_pizzas_vencidas()
+        pizza = self.agregar_pizza(gusto_principal)
+        producidas.append(pizza)
+        producidas.extend(self.cargar(gustos))
+        return np.random.Exponential(10), malas, producidas
 
     def tiene_gusto(self, gusto):
         for p in self.get_pizzas():
@@ -95,7 +102,9 @@ class Camioneta(object):
         for p in self.get_pizzas():
             if p.estado:
                 gustos.append(p.gusto)
-        return set(gustos)
+        set_gustos = set(gustos)
+        lista_gustos = list(set_gustos)
+        return lista_gustos
 
     def finalizar_carga(self, reloj):
         self.tiempo_entre_rec.append(reloj.get_reloj()-self.ultima_rec)

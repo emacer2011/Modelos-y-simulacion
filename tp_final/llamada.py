@@ -7,8 +7,8 @@ import numpy as np
 class Llamada(object):
     """docstring for Llamada"""
     def __init__(self, hora, gusto):
-        self.X = np.random.Normal(0, 1000/3)
-        self.Y = np.random.Normal(0, 1000/3)
+        self.X = np.random.normal(0, 1000/3)
+        self.Y = np.random.normal(0, 1000/3)
         self.hora = hora
         self.gusto = gusto
         self.ubicacion = (self.X, self.Y)
