@@ -19,6 +19,7 @@ class Camioneta(object):
         self.MAX_PIZZAS = 40
         self.llamada = None  # referencia al obj Llamada que atiende
         self.tiempo_entre_rec = []
+        self.ultima_rec = 0
 
     def get_ubicacion(self):
         return self.ubicacion
@@ -34,20 +35,17 @@ class Camioneta(object):
         """Devuelve tiempo en minutos"""
         return (self.VC_MAX * self.distancia_a_punto(x, y))
 
-    def get_estado(self):
+    def get_ocupado(self):
         return self.ocupado
-
-    def set_estado(self, new_ocupado):
-        self.ocupado = new_ocupado
 
     def get_pizzas(self):
         return self.pizzas
 
-    def agregar_pizzas(self, cantidad, gusto):
+    def agregar_pizza(self, gusto):
         r = Reloj()
-        for i in range(cantidad):
-            p = Pizza(gusto, r.get_valor())
-            self.pizzas[gusto].append(p)
+        p = Pizza(gusto, r.get_valor())
+        self.pizzas[gusto].append(p)
+        return p
 
     def quitar_pizzas_vencidas(self):
         malas = (pizza for pizza in self.pizzas if pizza.get_estado() is False)  # Devuelve las que estan en mal estado
@@ -55,7 +53,51 @@ class Camioneta(object):
         self.pizzas = buenas
         return malas
 
-    def carga(self):
-        """Devuelve el tiempo de carga"""
+    def cargar(self, gusto_principal, gustos):
+        """Devuelve el tiempo de carga y las pizzas en mal estado"""
+        producidas = []
         self.ocupado = True
-        return np.random.Exponential(10)
+        malas = self.quitar_pizzas_vencidas()
+        pizza = self.agregar_pizza(gusto_principal)
+        producidas.append(pizza)
+        while len(self.get_pizzas()) < self.MAX_PIZZAS:
+            key = np.random.randint(1, len(gustos))
+            prob = np.random.binomial(1, gustos[key].get_probabilidad())
+            if prob:
+                pizza = self.agregar_pizza(gustos[key])
+                producidas.append(pizza)
+                print "cargo pizza de gusto: %s", gustos[key].nombre
+        return np.random.Exponential(10), malas
+
+    def tiene_gusto(self, gusto):
+        for p in self.get_pizzas():
+            if p.gusto.nombre == gusto.nombre and p.estado is True:
+                return True
+        return False
+
+    def atender_llamado(self, llamado):
+        self.ocupado = True
+        self.llamada = llamado
+        x, y = llamado.get_ubicacion()
+        self.distancia_rec += self.distancia_a_punto(x, y)
+
+    def fin_atencion(self):
+        for p in self.get_pizzas():
+            if p.estado and p.gusto.nombre == self.llamada.gusto.nombre:
+                self.get_pizzas().pop(p)
+                break
+        self.set_ubicacion(self.llamada.ubicacion)
+        self.llamada = None
+        self.ocupado = False
+
+    def get_gustos(self):
+        gustos = []
+        for p in self.get_pizzas():
+            if p.estado:
+                gustos.append(p.gusto)
+        return set(gustos)
+
+    def finalizar_carga(self, reloj):
+        self.tiempo_entre_rec.append(reloj.get_reloj()-self.ultima_rec)
+        self.ultima_rec = reloj.get_reloj()
+        self.ocupado = False

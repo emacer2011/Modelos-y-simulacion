@@ -9,7 +9,6 @@ class Llamada(object):
     def __init__(self, hora, gusto):
         self.X = np.random.Normal(0, 1000/3)
         self.Y = np.random.Normal(0, 1000/3)
-        super(Llamada, self).__init__()
         self.hora = hora
         self.gusto = gusto
         self.ubicacion = (self.X, self.Y)
@@ -22,3 +21,9 @@ class Llamada(object):
 
     def get_hora(self):
         return self.hora
+
+    def set_gusto(self, nuevo_gusto):
+        self.gusto = nuevo_gusto
+
+    def timeout(self, hora_actual):
+        return hora_actual - self.hora >= 30
