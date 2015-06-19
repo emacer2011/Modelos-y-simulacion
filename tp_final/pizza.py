@@ -19,4 +19,12 @@ class Pizza(object):
         super(Pizza, self).__init__()
         self.gusto = gusto
         self.creacion = creacion
+        self.vencimiento = 60
         self.estado = True  # True = Buen estado
+
+    def get_estado(self, hora):
+        resto_tiempo = hora - self.creacion
+        if (resto_tiempo > self.vencimiento):
+            return False
+        else:
+            return True

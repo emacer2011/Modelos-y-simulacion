@@ -189,17 +189,18 @@ def main():
                 elif eventos[k].tipo == "inicio_recarga":
                     c = eventos[k].objeto
                     tenia = len(c.pizzas)
-                    t_carga, malas, producidas = c.recargar(c.llamada.gusto, gustos)
+                    t_carga, malas, producidas = c.recargar(c.llamada.gusto, gustos, reloj.get_reloj())
                     pizzas_descartadas.extend(malas)
                     pizzas_producidas.extend(producidas)
-                    print "Soy la camioneta %d. Tenia %d, Descarte %d y recargue %d pizzas" % (c.id, tenia, len(pizzas_descartadas), len(pizzas_producidas))
+                    print "Soy la camioneta %d. Tenia %d, Descarte %d y recargue %d pizzas" % (c.id, tenia, len(malas), len(producidas))
                     nuevo_evento = Evento(c, reloj.get_reloj()+t_viaje+t_carga, "fin_recarga")
                     evento_atendido = True
                 elif eventos[k].tipo == "fin_recarga":
-                    reloj = singleton(Reloj)
+                    #reloj = singleton(Reloj)
                     c = eventos[k].objeto
                     reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), eventos[k].tiempo))
-                    c.finalizar_carga(singleton(Reloj).get_reloj())
+                    #c.finalizar_carga(singleton(Reloj).get_reloj())
+                    c.finalizar_carga(reloj.get_reloj())
                     evento_atendido = True
 
                 if not nuevo_evento is None:

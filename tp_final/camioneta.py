@@ -21,7 +21,7 @@ class Camioneta(object):
             self.pizzas = []
         if tiempo_entre_rec is None:
             self.tiempo_entre_rec = []
-
+        
     def get_ubicacion(self):
         return self.ubicacion
 
@@ -48,9 +48,9 @@ class Camioneta(object):
         self.pizzas.append(pizza)
         return pizza
 
-    def quitar_pizzas_vencidas(self):
-        malas = filter(lambda p: p.estado is False, self.pizzas)
-        buenas = filter(lambda p: p.estado is True, self.pizzas)
+    def quitar_pizzas_vencidas(self, hora):
+        malas = filter(lambda p: p.get_estado(hora) is False, self.pizzas)
+        buenas = filter(lambda p: p.get_estado(hora) is True, self.pizzas)
         self.pizzas = buenas
         return malas
 
@@ -66,11 +66,11 @@ class Camioneta(object):
                 #print "cargo pizza de gusto: ", gustos[key].nombre
         return producidas
 
-    def recargar(self, gusto_principal, gustos):
+    def recargar(self, gusto_principal, gustos, hora):
         """Devuelve el tiempo de carga, las pizzas en mal estado, las pizzas producidas"""
         producidas = []
         self.ocupado = True
-        malas = self.quitar_pizzas_vencidas()
+        malas = self.quitar_pizzas_vencidas(hora)
         if len(self.pizzas) == self.MAX_PIZZAS:
             self.pizzas.remove(self.pizzas[0])
             print "descarto porque estoy lleno"
