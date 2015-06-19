@@ -34,7 +34,7 @@ class Camioneta(object):
 
     def tiempo_a_punto(self, x, y):
         """Devuelve tiempo en minutos"""
-        return (self.VC_MAX * self.distancia_a_punto(x, y))
+        return (int) (self.distancia_a_punto(x, y) / self.VC_MAX)
 
     def get_ocupado(self):
         return self.ocupado
@@ -73,8 +73,8 @@ class Camioneta(object):
         malas = self.quitar_pizzas_vencidas()
         if len(self.pizzas) == self.MAX_PIZZAS:
             self.pizzas.remove(self.pizzas[0])
-            pizza = self.agregar_pizza(gusto_principal)
             print "descarto porque estoy lleno"
+        pizza = self.agregar_pizza(gusto_principal)
         producidas.append(pizza)
         producidas.extend(self.cargar(gustos))
         return np.random.exponential(10), malas, producidas
@@ -94,7 +94,7 @@ class Camioneta(object):
     def fin_atencion(self):
         for p in self.get_pizzas():
             if p.estado and p.gusto.nombre == self.llamada.gusto.nombre:
-                self.get_pizzas().pop(p)
+                self.get_pizzas().remove(p)
                 break
         self.set_ubicacion(self.llamada.ubicacion)
         self.llamada = None
