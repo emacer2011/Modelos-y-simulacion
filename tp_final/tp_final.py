@@ -42,8 +42,9 @@ def crear_gustos():
 def crear_llamadas(gustos):
     llamadas = []
     reloj = 0
-    for i in np.random.poisson(20/60, LLAMADAS):
-        reloj += i
+    for i in range(LLAMADAS):
+        hora = np.random.poisson(60/20)
+        reloj += hora
         llamada = Llamada(reloj, get_gusto(gustos))
         llamadas.append(llamada)
     return llamadas
@@ -107,6 +108,11 @@ def main():
             pizzas_producidas.extend(producidas)
             llamadas = crear_llamadas(gustos)
             eventos = crear_evento_llamada([], llamadas)
+            print "LISTADO DE EVENTOS DE LLAMADA"
+            for e in eventos:
+                print e
+            break
+
             reloj = singleton(Reloj)
             reloj.set_reloj(0)
             k = 0
