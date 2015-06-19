@@ -9,4 +9,4 @@ class Evento(object):
         self.tipo = tipo
 
     def __str__(self):
-        return "(%d){%s - %d}" % (self.tiempo, self.objeto.__class__.__name__.title(), self.objeto.id)
+        return "(%d){%s - %s - %d}" % (self.tiempo, self.objeto.__class__.__name__.title(), self.tipo, self.objeto.id)

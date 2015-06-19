@@ -9,8 +9,8 @@ from evento import Evento
 from reloj import *
 from camioneta import Camioneta
 
-CORRIDAS = 10
-EXPERIMENTOS = 20
+CORRIDAS = 1
+EXPERIMENTOS = 1
 LLAMADAS = 100
 MAX_DISTANCIA = 2000
 MAX_CAMIONETAS = 4
@@ -42,7 +42,7 @@ def crear_gustos():
 def crear_llamadas(gustos):
     llamadas = []
     reloj = 0
-    for i in np.random.poisson(60/20, LLAMADAS):
+    for i in np.random.poisson(20/60, LLAMADAS):
         reloj += i
         llamada = Llamada(reloj, get_gusto(gustos))
         llamadas.append(llamada)
@@ -56,8 +56,9 @@ def crear_camionetas(gustos):
         c = Camioneta()
         camionetas.append(c)
         producidas.extend(c.cargar(gustos))
-        for p in c.pizzas:
-            print p.gusto.nombre
+        print "Cree %d pizzas para la camioneta %s" % (len(c.pizzas), c.id)
+        #for p in c.pizzas:
+        #    print p.gusto.nombre
     return camionetas, producidas
 
 
@@ -109,32 +110,33 @@ def main():
             reloj = singleton(Reloj)
             reloj.set_reloj(0)
             k = 0
-            while len(eventos) > 0:
+            while len(eventos) > 0:            
                 reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), eventos[k].tiempo))
+                evento_atendido = False #Flag de que atendi el evento
+                print "ATIENDO EVENTO %s EN TIEMPO %d. ME QUEDAN %d EVENTOS POR ATENDER" % (eventos[k].tipo, reloj.get_reloj(), len(eventos))
                 if eventos[k].tipo == "llamada_cliente":
                     llamado = eventos[k].objeto
                     x, y = llamado.get_ubicacion()
                     if distancia_entre_puntos(x, y, 0, 0) > MAX_DISTANCIA:
                         print "fuera de rango - pedido rechazado"
                         llamados_rechazados.append(llamado)
-                        eliminar_evento(eventos, llamado)
+                        evento_atendido = True
                         break
                     else:
                         if llamado.timeout(reloj.get_reloj()):
-                            eliminar_evento(eventos, llamado)
                             llamados_perdidos.append(llamado)
                             print "llamada perdida por timeout"
+                            evento_atendido = True
                             break
                         gusto = llamado.get_gusto()
                         camionetas = ordenar_camionetas(camionetas, llamado)
-                        atendido = False
                         for c in camionetas:
                             if not c.get_ocupado():
                                 if c.tiene_gusto(gusto):
                                     c.atender_llamado(llamado)
                                     reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), llamado.get_hora()))
                                     eventos = agregar_evento(eventos, Evento(c, reloj.get_reloj(), "atencion_pedido"))
-                                    atendido = True
+                                    evento_atendido = True
                                     print "atendida"
                                     break
                                 else:
@@ -145,31 +147,30 @@ def main():
                                         c.atender_llamado(llamado)
                                         reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), llamado.get_hora()))
                                         eventos = agregar_evento(eventos, Evento(c, reloj.get_reloj(), "atencion_pedido"))
-                                        atendido = True
+                                        evento_atendido = True
                                         print "cambio gusto"
                                     else:
                                         t_viaje = c.tiempo_a_punto(0, 0)
                                         c.atender_llamado(llamado)
                                         eventos = agregar_evento(eventos, Evento(c, reloj.get_reloj()+t_viaje, "inicio_recarga"))
-                                        print "%d recargando" % (c.id)
-                        if atendido:
-                            eventos = eliminar_evento(eventos, eventos[k])
-                        else:
+                                        print "Mando camioneta %d a recargar" % (c.id)
+                        if evento_atendido is False:
                             print "llamado %d en espera" % (eventos[k].objeto.id)
                             k += 1
                 elif eventos[k].tipo == "atencion_pedido":
                     c = eventos[k].objeto
                     x, y = c.llamada.ubicacion
                     t_viaje = c.tiempo_a_punto(x, y)
+                    print "Soy la camioneta %d y atiendo un Pedido" % (c.id)
                     eventos = agregar_evento(eventos, Evento(c, reloj.get_reloj()+t_viaje, "entrega_pedido"))
-                    eventos = eliminar_evento(eventos, eventos[k])
+                    evento_atendido = True
                 elif eventos[k].tipo == "entrega_pedido":
                     c = eventos[k].objeto
                     if c.llamada.timeout(reloj.get_reloj()):
-                            eliminar_evento(eventos, eventos[k])
-                            llamados_perdidos.append(c.llamada)
-                            print "llamada %d perdida por timeout" % (c.llamada.id)
-                            break
+                        llamados_perdidos.append(c.llamada)
+                        print "llamada %d perdida por timeout" % (c.llamada.id)
+                        evento_atendido = True
+                        break
                     c.fin_atencion()
                     print "soy %d y entregue" % (c.id)
                     llamados_atendidos.append(c.llamada)
@@ -179,14 +180,28 @@ def main():
                     t_carga, malas, producidas = c.recargar(c.llamada.gusto, gustos)
                     pizzas_descartadas.extend(malas)
                     pizzas_producidas.extend(producidas)
+                    print "Soy la camioneta %d. Descarte %d y recargue %d pizzas" % (c.id, len(pizzas_descartadas), len(pizzas_producidas))
                     eventos = agregar_evento(eventos, Evento(c, reloj.get_reloj()+t_viaje+t_carga, "fin_recarga"))
-                    eventos = eliminar_evento(eventos, eventos[k])
+                    evento_atendido = True
                 elif eventos[k].tipo == "fin_recarga":
                     reloj = singleton(Reloj)
                     c = eventos[k].objeto
                     reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), eventos[k].tiempo))
                     c.finalizar_carga(singleton(Reloj).get_reloj())
+                    evento_atendido = True
+
+                if evento_atendido:
                     eventos = eliminar_evento(eventos, eventos[k])
+                    print "Evento fue atendido y lo elimino de la lista de eventos. Me quedan %d Eventos por atender" % (len(eventos))
+                    for e in eventos:
+                        print e
+
+        print "Resultados de la corrida"
+        print "Cantidad de Pizzas producidas: ", len(pizzas_producidas)
+        print "Cantidad de Pizzas descartadas: ", len(pizzas_descartadas)
+        print "Cantidad de llamados atendidos: ", len(llamados_atendidos)
+        print "Cantidad de llamados perdidos: ", len(llamados_perdidos)
+        print "Cantidad de llamados rechazados: ", len(llamados_rechazados)
 
 if __name__ == '__main__':
     main()

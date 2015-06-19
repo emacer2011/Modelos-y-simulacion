@@ -56,7 +56,7 @@ class Camioneta(object):
 
     def cargar(self, gustos):
         producidas = []
-        print "soy %d y tengo %d pizzas" % (self.id, len(self.pizzas))
+        #print "soy %d y tengo %d pizzas" % (self.id, len(self.pizzas))
         while len(self.pizzas) < self.MAX_PIZZAS:
             key = np.random.randint(1, len(gustos))
             prob = np.random.binomial(1, gustos[key].get_probabilidad())
