@@ -180,7 +180,7 @@ def main():
                     if c.llamada.timeout(reloj.get_reloj()):
                         llamados_perdidos.append(c.llamada)
                         print "llamada %d perdida por timeout" % (c.llamada.id)
-                        evento_atendido = True
+                        #evento_atendido = True
                         eventos = eliminar_evento(eventos, eventos[k])
                         #break
                     c.fin_atencion()
@@ -216,7 +216,7 @@ def main():
                         print e
                 else:
                     k += 1
-            print len(eventos)
+            print "Fin ejecucion - eventos en cola: ", len(eventos)
         print "Resultados de la corrida"
         print "Cantidad de Pizzas producidas: ", len(pizzas_producidas)
         print "Cantidad de Pizzas descartadas: ", len(pizzas_descartadas)
