@@ -134,7 +134,8 @@ def main():
                             llamados_perdidos.append(llamado)
                             print "llamada perdida por timeout"
                             evento_atendido = True
-                            break
+                            eventos = eliminar_evento(eventos, eventos[k])
+                            continue
                         gusto = llamado.get_gusto()
                         camionetas = ordenar_camionetas(camionetas, llamado)
                         for c in camionetas:
@@ -180,7 +181,8 @@ def main():
                         llamados_perdidos.append(c.llamada)
                         print "llamada %d perdida por timeout" % (c.llamada.id)
                         evento_atendido = True
-                        break
+                        eventos = eliminar_evento(eventos, eventos[k])
+                        #break
                     c.fin_atencion()
                     print "soy %d y entregue" % (c.id)
                     llamados_atendidos.append(c.llamada)
@@ -214,7 +216,7 @@ def main():
                         print e
                 else:
                     k += 1
-
+            print len(eventos)
         print "Resultados de la corrida"
         print "Cantidad de Pizzas producidas: ", len(pizzas_producidas)
         print "Cantidad de Pizzas descartadas: ", len(pizzas_descartadas)
