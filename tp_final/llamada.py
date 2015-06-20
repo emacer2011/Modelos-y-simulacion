@@ -8,8 +8,10 @@ class Llamada(object):
     """docstring for Llamada"""
     def __init__(self, hora, gusto):
         self.id = id(self)
-        self.X = np.random.normal(0, 1000/3)
-        self.Y = np.random.normal(0, 1000/3)
+        self.X = np.random.normal(0, 2500/3)
+        self.Y = np.random.normal(0, 2500/3)
+        # self.X = np.random.randint(-1000, 1000)
+        # self.Y = np.random.randint(-1000, 1000)
         self.hora = hora
         self.gusto = gusto
         self.ubicacion = (self.X, self.Y)

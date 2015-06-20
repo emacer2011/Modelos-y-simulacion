@@ -8,13 +8,16 @@ from llamada import Llamada
 from evento import Evento
 from reloj import *
 from camioneta import Camioneta
+import matplotlib.pyplot as plt 
 
 CORRIDAS = 5
 EXPERIMENTOS = 5
-LLAMADAS = 100
+LLAMADAS = 20
 MAX_DISTANCIA = 2000
 MAX_CAMIONETAS = 4
 PROB_CAMBIO = 0.3
+posiciones_x = []
+posiciones_y = []
 
 
 def agregar_evento(eventos, evento):
@@ -43,10 +46,15 @@ def crear_llamadas(gustos):
     llamadas = []
     reloj = 0
     for i in range(LLAMADAS):
-        hora = np.random.poisson(60/20)
+        hora = np.random.poisson(60/30)
         reloj += hora
         llamada = Llamada(reloj, get_gusto(gustos))
+        posiciones_x.append(llamada.get_ubicacion()[0])
+        posiciones_y.append(llamada.get_ubicacion()[1])
         llamadas.append(llamada)
+    x = np.array(posiciones_x)
+    y = np.array(posiciones_y)
+    plt.scatter(x,y)
     return llamadas
 
 
@@ -222,13 +230,26 @@ def main():
         total_pizzas_descartadas.append(len(pizzas_descartadas))
         total_llamados_atendidos.append(len(llamados_atendidos))
         total_pizzas_producidas.append(len(pizzas_producidas))
-    print "Resultados de la corrida"
+    # print "Resultados de la corrida"
+    # print "Promedio %.2f Cantidad de Pizzas producidas: %d" %(np.average(total_pizzas_producidas), np.sum(total_pizzas_producidas)+produccion_inicial )
+    # print "Promedio %.2f Cantidad de Pizzas descartadas: %d" %(np.average(total_pizzas_descartadas) , np.sum(total_pizzas_descartadas))
+    # print "Promedio %.2f Cantidad de llamados atendidos: %d" %(np.average(total_llamados_atendidos) , np.sum(total_llamados_atendidos))
+    # print "Promedio %.2f Cantidad de llamados perdidos: %d" %(np.average(total_llamados_perdidos), np.sum(total_llamados_perdidos))
+    # print "Promedio %.2f Cantidad de llamados rechazados: %d" %(np.average(total_llamados_rechazados), np.sum(total_llamados_rechazados))
+    # print "Contenido de stock en camionetas: ", (np.sum(total_pizzas_producidas)+produccion_inicial) - np.sum(total_pizzas_descartadas) - np.sum(total_llamados_atendidos)
+    
+    print "Resultados"
     print "Promedio %.2f Cantidad de Pizzas producidas: %d" %(np.average(total_pizzas_producidas), np.sum(total_pizzas_producidas)+produccion_inicial )
     print "Promedio %.2f Cantidad de Pizzas descartadas: %d" %(np.average(total_pizzas_descartadas) , np.sum(total_pizzas_descartadas))
     print "Promedio %.2f Cantidad de llamados atendidos: %d" %(np.average(total_llamados_atendidos) , np.sum(total_llamados_atendidos))
     print "Promedio %.2f Cantidad de llamados perdidos: %d" %(np.average(total_llamados_perdidos), np.sum(total_llamados_perdidos))
     print "Promedio %.2f Cantidad de llamados rechazados: %d" %(np.average(total_llamados_rechazados), np.sum(total_llamados_rechazados))
+    print "\nOtras estadisticas"
     print "Contenido de stock en camionetas: ", (np.sum(total_pizzas_producidas)+produccion_inicial) - np.sum(total_pizzas_descartadas) - np.sum(total_llamados_atendidos)
-    
+    print "Distancia recorridas (km) - Tiempo entre recargas (hs)"
+    for c in camionetas:
+        print " %.2f - %.2f"  % (c.distancia_rec/1000, np.sum(c.tiempo_entre_rec)/60)
+    plt.show()
+
 if __name__ == '__main__':
     main()
