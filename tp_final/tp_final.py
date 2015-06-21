@@ -65,9 +65,6 @@ def crear_camionetas(gustos):
         c = Camioneta()
         camionetas.append(c)
         producidas.extend(c.cargar(gustos))
-        print "Cree %d pizzas para la camioneta %s" % (len(c.pizzas), c.id)
-        #for p in c.pizzas:
-        #    print p.gusto.nombre
     return camionetas, producidas
 
 
@@ -117,16 +114,9 @@ def main():
         llamados_atendidos = []
         pizzas_descartadas = []
         pizzas_producidas = []
-        #pizzas_producidas.extend(producidas)
         for j in range(CORRIDAS):
-            print "E: %d, C: %d" % (i, j)
             llamadas = crear_llamadas(gustos)
             eventos = crear_evento_llamada([], llamadas)
-            print "LISTADO DE EVENTOS DE LLAMADA"
-            for e in eventos:
-                print e
-            #break
-
             reloj = singleton(Reloj)
             reloj.set_reloj(0)
             k = 0
@@ -134,12 +124,10 @@ def main():
                 reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), eventos[k].tiempo))
                 evento_atendido = False #Flag de que atendi el evento
                 nuevo_evento = None
-                print "Eventos no atendidos aun: ", len(eventos)
                 if eventos[k].tipo == "llamada_cliente":
                     llamado = eventos[k].objeto
                     x, y = llamado.get_ubicacion()
                     if distancia_entre_puntos(x, y, 0, 0) > MAX_DISTANCIA:
-                        print "fuera de rango - pedido rechazado"
                         llamados_rechazados.append(llamado)
                         evento_atendido = True
                     else:
@@ -159,7 +147,6 @@ def main():
                                         break
                                     else:
                                         if cambia_pedido():
-                                            print "Cliente cambia pedido"
                                             gustos_disponibles = c.get_gustos()
                                             gusto = gustos_disponibles[0]
                                             llamado.set_gusto(gusto)
@@ -168,18 +155,13 @@ def main():
                                             nuevo_evento = Evento(c, reloj.get_reloj(), "atencion_pedido")
                                             evento_atendido = True
                                         else:
-                                            print "Mando camioneta %d a recargar" % (c.id)
                                             t_viaje = c.tiempo_a_punto(0, 0)
                                             c.atender_llamado(llamado)
                                             nuevo_evento = Evento(c, reloj.get_reloj()+t_viaje, "inicio_recarga")
-                        if evento_atendido is False:
-                            print "Llamado %d en espera" % (eventos[k].objeto.id)
-                            
                 elif eventos[k].tipo == "atencion_pedido":
                     c = eventos[k].objeto
                     x, y = c.llamada.ubicacion
                     t_viaje = c.tiempo_a_punto(x, y)
-                    #print "Soy la camioneta %d y atiendo un Pedido" % (c.id)
                     nuevo_evento = Evento(c, reloj.get_reloj()+t_viaje, "entrega_pedido")
                     evento_atendido = True
                 elif eventos[k].tipo == "entrega_pedido":
@@ -187,10 +169,8 @@ def main():
                     c = current.objeto
                     if c.llamada.timeout(reloj.get_reloj()):
                         llamados_perdidos.append(c.llamada)
-                        print "llamada %d perdida por timeout" % (c.llamada.id)
                         evento_atendido = True
                     c.fin_atencion()
-                    print "Pizza entregada por %d" % (c.id)
                     llamados_atendidos.append(c.llamada)
                     reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), eventos[k].tiempo))
                     evento_atendido = True
@@ -201,42 +181,27 @@ def main():
                     t_carga, malas, producidas = c.recargar(c.llamada.gusto, gustos, reloj.get_reloj())
                     pizzas_descartadas.extend(malas)
                     pizzas_producidas.extend(producidas)
-                    print "Soy la camioneta %d. Tenia %d, Descarte %d y recargue %d pizzas" % (c.id, tenia, len(malas), len(producidas))
                     nuevo_evento = Evento(c, reloj.get_reloj()+t_viaje+t_carga, "fin_recarga")
                     evento_atendido = True
                 elif eventos[k].tipo == "fin_recarga":
-                    #reloj = singleton(Reloj)
                     c = eventos[k].objeto
                     reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), eventos[k].tiempo))
-                    #c.finalizar_carga(singleton(Reloj).get_reloj())
                     c.finalizar_carga(reloj.get_reloj())
                     evento_atendido = True
 
                 if not nuevo_evento is None:
-                    #print "Son las %d y creo el evento %s para las %d" % (reloj.get_reloj(), nuevo_evento.tipo, nuevo_evento.tiempo)
                     eventos = agregar_evento(eventos, nuevo_evento)
 
                 if evento_atendido:
                     eventos = eliminar_evento(eventos, eventos[k])
                     k = 0
-                    #print "Evento fue atendido y lo elimino de la lista de eventos. Me quedan %d Eventos por atender" % (len(eventos))
-                    #for e in eventos:
-                    #    print e
                 else:
                     k += 1
-            print "Fin ejecucion - eventos en cola: ", len(eventos)
         total_llamados_perdidos.append(len(llamados_perdidos))
         total_llamados_rechazados.append(len(llamados_rechazados))
         total_pizzas_descartadas.append(len(pizzas_descartadas))
         total_llamados_atendidos.append(len(llamados_atendidos))
         total_pizzas_producidas.append(len(pizzas_producidas))
-    # print "Resultados de la corrida"
-    # print "Promedio %.2f Cantidad de Pizzas producidas: %d" %(np.average(total_pizzas_producidas), np.sum(total_pizzas_producidas)+produccion_inicial )
-    # print "Promedio %.2f Cantidad de Pizzas descartadas: %d" %(np.average(total_pizzas_descartadas) , np.sum(total_pizzas_descartadas))
-    # print "Promedio %.2f Cantidad de llamados atendidos: %d" %(np.average(total_llamados_atendidos) , np.sum(total_llamados_atendidos))
-    # print "Promedio %.2f Cantidad de llamados perdidos: %d" %(np.average(total_llamados_perdidos), np.sum(total_llamados_perdidos))
-    # print "Promedio %.2f Cantidad de llamados rechazados: %d" %(np.average(total_llamados_rechazados), np.sum(total_llamados_rechazados))
-    # print "Contenido de stock en camionetas: ", (np.sum(total_pizzas_producidas)+produccion_inicial) - np.sum(total_pizzas_descartadas) - np.sum(total_llamados_atendidos)
     
     print "Resultados"
     print "Promedio %.2f Cantidad de Pizzas producidas: %d" %(np.average(total_pizzas_producidas), np.sum(total_pizzas_producidas)+produccion_inicial )

@@ -56,14 +56,12 @@ class Camioneta(object):
 
     def cargar(self, gustos):
         producidas = []
-        #print "soy %d y tengo %d pizzas" % (self.id, len(self.pizzas))
         while len(self.pizzas) < self.MAX_PIZZAS:
             key = np.random.randint(1, len(gustos))
             prob = np.random.binomial(1, gustos[key].get_probabilidad())
             if prob:
                 pizza = self.agregar_pizza(gustos[key])
                 producidas.append(pizza)
-                #print "cargo pizza de gusto: ", gustos[key].nombre
         return producidas
 
     def recargar(self, gusto_principal, gustos, hora):
@@ -73,7 +71,6 @@ class Camioneta(object):
         malas = self.quitar_pizzas_vencidas(hora)
         if len(self.pizzas) == self.MAX_PIZZAS:
             self.pizzas.remove(self.pizzas[0])
-            print "descarto porque estoy lleno"
         pizza = self.agregar_pizza(gusto_principal)
         producidas.append(pizza)
         producidas.extend(self.cargar(gustos))
