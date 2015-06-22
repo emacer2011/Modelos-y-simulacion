@@ -8,11 +8,12 @@ from llamada import Llamada
 from evento import Evento
 from reloj import *
 from camioneta import Camioneta
+from estadisticas import Estadisticas
 import matplotlib.pyplot as plt 
 
-CORRIDAS = 5
-EXPERIMENTOS = 5
-LLAMADAS = 20
+CORRIDAS = 1
+EXPERIMENTOS = 1
+LLAMADAS = 50
 MAX_DISTANCIA = 2000
 MAX_CAMIONETAS = 4
 PROB_CAMBIO = 0.3
@@ -87,7 +88,10 @@ def distancia_entre_puntos(x1, y1, x2, y2):
 
 def ordenar_camionetas(camionetas, llamado):
     x, y = llamado.get_ubicacion()
+    #for c in camionetas:
+    #    print "Soy la camioneta %d y estoy en (%d,%d) a %d de distnacia del punto (%d,%d) y estoy ocupado %s" % (c.id, c.get_ubicacion()[0], c.get_ubicacion()[1], c.distancia_a_punto(x,y),x,y, c.get_ocupado() )
     camionetas.sort(key=lambda c: c.distancia_a_punto(x, y))
+    #print camionetas
     return camionetas
 
 
@@ -139,24 +143,21 @@ def main():
                             camionetas = ordenar_camionetas(camionetas, llamado)
                             for c in camionetas:
                                 if not c.get_ocupado():
+                                    evento_atendido = True
+                                    c.atender_llamado(llamado)
                                     if c.tiene_gusto(gusto):
-                                        c.atender_llamado(llamado)
                                         reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), llamado.get_hora()))
                                         nuevo_evento = Evento(c, reloj.get_reloj(), "atencion_pedido")
-                                        evento_atendido = True
                                         break
                                     else:
                                         if cambia_pedido():
                                             gustos_disponibles = c.get_gustos()
                                             gusto = gustos_disponibles[0]
                                             llamado.set_gusto(gusto)
-                                            c.atender_llamado(llamado)
                                             reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), llamado.get_hora()))
                                             nuevo_evento = Evento(c, reloj.get_reloj(), "atencion_pedido")
-                                            evento_atendido = True
                                         else:
                                             t_viaje = c.tiempo_a_punto(0, 0)
-                                            c.atender_llamado(llamado)
                                             nuevo_evento = Evento(c, reloj.get_reloj()+t_viaje, "inicio_recarga")
                 elif eventos[k].tipo == "atencion_pedido":
                     c = eventos[k].objeto
@@ -169,9 +170,9 @@ def main():
                     c = current.objeto
                     if c.llamada.timeout(reloj.get_reloj()):
                         llamados_perdidos.append(c.llamada)
-                        evento_atendido = True
+                    else:
+                        llamados_atendidos.append(c.llamada)
                     c.fin_atencion()
-                    llamados_atendidos.append(c.llamada)
                     reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), eventos[k].tiempo))
                     evento_atendido = True
 
@@ -187,6 +188,11 @@ def main():
                     c = eventos[k].objeto
                     reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), eventos[k].tiempo))
                     c.finalizar_carga(reloj.get_reloj())
+                    #Termine de cargar. Creo evento de atencion_pedido
+                    #Seteo tiempo a punto del llamado
+                    x,y=c.llamada.get_ubicacion()
+                    t_viaje = c.tiempo_a_punto(x,y)
+                    nuevo_evento = Evento(c, reloj.get_reloj() + t_viaje, "atencion_pedido")
                     evento_atendido = True
 
                 if not nuevo_evento is None:
@@ -197,24 +203,34 @@ def main():
                     k = 0
                 else:
                     k += 1
+
+            for c in camionetas:
+                print "camioneta %d %s " % (c.id, c.get_ocupado())
+
         total_llamados_perdidos.append(len(llamados_perdidos))
         total_llamados_rechazados.append(len(llamados_rechazados))
         total_pizzas_descartadas.append(len(pizzas_descartadas))
         total_llamados_atendidos.append(len(llamados_atendidos))
         total_pizzas_producidas.append(len(pizzas_producidas))
     
+    e = Estadisticas()
+    e.set_produccion(produccion_inicial, total_pizzas_producidas, total_pizzas_descartadas)
+    e.set_llamadas(total_llamados_atendidos, total_llamados_perdidos, total_llamados_rechazados)
+
+
     print "Resultados"
-    print "Promedio %.2f Cantidad de Pizzas producidas: %d" %(np.average(total_pizzas_producidas), np.sum(total_pizzas_producidas)+produccion_inicial )
-    print "Promedio %.2f Cantidad de Pizzas descartadas: %d" %(np.average(total_pizzas_descartadas) , np.sum(total_pizzas_descartadas))
-    print "Promedio %.2f Cantidad de llamados atendidos: %d" %(np.average(total_llamados_atendidos) , np.sum(total_llamados_atendidos))
-    print "Promedio %.2f Cantidad de llamados perdidos: %d" %(np.average(total_llamados_perdidos), np.sum(total_llamados_perdidos))
-    print "Promedio %.2f Cantidad de llamados rechazados: %d" %(np.average(total_llamados_rechazados), np.sum(total_llamados_rechazados))
+    print "Promedio de Pizzas Producidas:  %.2f - Cantidad: %d" % e.get_pizzas_producidas()
+    print "Promedio de Pizzas descartadas: %.2f - Cantidad: %d (%.2f%%)" %  e.get_pizzas_descartadas()
+    print "Promedio de llamados total: %.2f - Cantidad: %d" % e.get_llamados_total()
+    print "Promedio de llamados atendidos: %.2f - Cantidad: %d (%.2f%%)" % e.get_llamados_atendidos()
+    print "Promedio de llamados perdidos:  %.2f - Cantidad: %d (%.2f%%)" % e.get_llamados_perdidos()
+    print "Promedio de llamados rechazados: %.2f - Cantidad: %d (%.2f%%)" % e.get_llamados_rechazados()
     print "\nOtras estadisticas"
     print "Contenido de stock en camionetas: ", (np.sum(total_pizzas_producidas)+produccion_inicial) - np.sum(total_pizzas_descartadas) - np.sum(total_llamados_atendidos)
     print "Distancia recorridas (km) - Tiempo entre recargas (hs)"
     for c in camionetas:
         print " %.2f - %.2f"  % (c.distancia_rec/1000, np.sum(c.tiempo_entre_rec)/60)
-    plt.show()
+    #plt.show()
 
 if __name__ == '__main__':
     main()

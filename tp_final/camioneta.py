@@ -28,9 +28,10 @@ class Camioneta(object):
     def set_ubicacion(self, new_ubicacion):
         self.ubicacion = new_ubicacion
 
-    def distancia_a_punto(self, x, y):
+    def distancia_a_punto(self, x2, y2):
         """Devuelve distancia en metros"""
-        return math.sqrt(x**2+y**2)
+        x1, y1 = self.get_ubicacion()
+        return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
     def tiempo_a_punto(self, x, y):
         """Devuelve tiempo en minutos"""
@@ -68,6 +69,8 @@ class Camioneta(object):
         """Devuelve el tiempo de carga, las pizzas en mal estado, las pizzas producidas"""
         producidas = []
         self.ocupado = True
+        #Me situo en punto 0,0
+        self.set_ubicacion((0,0))
         malas = self.quitar_pizzas_vencidas(hora)
         if len(self.pizzas) == self.MAX_PIZZAS:
             self.pizzas.remove(self.pizzas[0])
@@ -87,6 +90,7 @@ class Camioneta(object):
         self.llamada = llamado
         x, y = llamado.get_ubicacion()
         self.distancia_rec += self.distancia_a_punto(x, y)
+        print "[%d] soy camioneta %d y llevo recorrido %d km" % (singleton(Reloj).get_reloj(), self.id, self.distancia_rec/1000)
 
     def fin_atencion(self):
         for p in self.get_pizzas():
@@ -94,7 +98,7 @@ class Camioneta(object):
                 self.get_pizzas().remove(p)
                 break
         self.set_ubicacion(self.llamada.ubicacion)
-        self.llamada = None
+        #self.llamada = None
         self.ocupado = False
 
     def get_gustos(self):
@@ -109,4 +113,4 @@ class Camioneta(object):
     def finalizar_carga(self, reloj):
         self.tiempo_entre_rec.append(reloj-self.ultima_rec)
         self.ultima_rec = reloj
-        self.ocupado = False
+        #self.ocupado = False
