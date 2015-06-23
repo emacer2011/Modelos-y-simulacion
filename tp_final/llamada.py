@@ -15,6 +15,7 @@ class Llamada(object):
         self.hora = hora
         self.gusto = gusto
         self.ubicacion = (self.X, self.Y)
+        self.atendida = False
 
     def get_ubicacion(self):
         return self.ubicacion
@@ -30,3 +31,6 @@ class Llamada(object):
 
     def timeout(self, hora_actual):
         return hora_actual - self.hora >= 30
+
+    def is_atendida():
+        return self.atendida

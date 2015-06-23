@@ -9,11 +9,10 @@ from evento import Evento
 from reloj import *
 from camioneta import Camioneta
 from estadisticas import Estadisticas
-import matplotlib.pyplot as plt 
 
 CORRIDAS = 1
 EXPERIMENTOS = 1
-LLAMADAS = 50
+LLAMADAS = 200
 MAX_DISTANCIA = 2000
 MAX_CAMIONETAS = 4
 PROB_CAMBIO = 0.3
@@ -53,9 +52,6 @@ def crear_llamadas(gustos):
         posiciones_x.append(llamada.get_ubicacion()[0])
         posiciones_y.append(llamada.get_ubicacion()[1])
         llamadas.append(llamada)
-    x = np.array(posiciones_x)
-    y = np.array(posiciones_y)
-    plt.scatter(x,y)
     return llamadas
 
 
@@ -88,10 +84,7 @@ def distancia_entre_puntos(x1, y1, x2, y2):
 
 def ordenar_camionetas(camionetas, llamado):
     x, y = llamado.get_ubicacion()
-    #for c in camionetas:
-    #    print "Soy la camioneta %d y estoy en (%d,%d) a %d de distnacia del punto (%d,%d) y estoy ocupado %s" % (c.id, c.get_ubicacion()[0], c.get_ubicacion()[1], c.distancia_a_punto(x,y),x,y, c.get_ocupado() )
     camionetas.sort(key=lambda c: c.distancia_a_punto(x, y))
-    #print camionetas
     return camionetas
 
 
@@ -156,9 +149,11 @@ def main():
                                             llamado.set_gusto(gusto)
                                             reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), llamado.get_hora()))
                                             nuevo_evento = Evento(c, reloj.get_reloj(), "atencion_pedido")
+                                            break
                                         else:
                                             t_viaje = c.tiempo_a_punto(0, 0)
                                             nuevo_evento = Evento(c, reloj.get_reloj()+t_viaje, "inicio_recarga")
+                                            break
                 elif eventos[k].tipo == "atencion_pedido":
                     c = eventos[k].objeto
                     x, y = c.llamada.ubicacion
@@ -172,13 +167,12 @@ def main():
                         llamados_perdidos.append(c.llamada)
                     else:
                         llamados_atendidos.append(c.llamada)
-                    c.fin_atencion()
+                    c.fin_atencion(reloj.get_reloj())
                     reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), eventos[k].tiempo))
                     evento_atendido = True
 
                 elif eventos[k].tipo == "inicio_recarga":
                     c = eventos[k].objeto
-                    tenia = len(c.pizzas)
                     t_carga, malas, producidas = c.recargar(c.llamada.gusto, gustos, reloj.get_reloj())
                     pizzas_descartadas.extend(malas)
                     pizzas_producidas.extend(producidas)
@@ -188,10 +182,8 @@ def main():
                     c = eventos[k].objeto
                     reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), eventos[k].tiempo))
                     c.finalizar_carga(reloj.get_reloj())
-                    #Termine de cargar. Creo evento de atencion_pedido
-                    #Seteo tiempo a punto del llamado
-                    x,y=c.llamada.get_ubicacion()
-                    t_viaje = c.tiempo_a_punto(x,y)
+                    x, y = c.llamada.get_ubicacion()
+                    t_viaje = c.tiempo_a_punto(x, y)
                     nuevo_evento = Evento(c, reloj.get_reloj() + t_viaje, "atencion_pedido")
                     evento_atendido = True
 
@@ -212,7 +204,7 @@ def main():
         total_pizzas_descartadas.append(len(pizzas_descartadas))
         total_llamados_atendidos.append(len(llamados_atendidos))
         total_pizzas_producidas.append(len(pizzas_producidas))
-    
+
     e = Estadisticas()
     e.set_produccion(produccion_inicial, total_pizzas_producidas, total_pizzas_descartadas)
     e.set_llamadas(total_llamados_atendidos, total_llamados_perdidos, total_llamados_rechazados)
@@ -220,17 +212,24 @@ def main():
 
     print "Resultados"
     print "Promedio de Pizzas Producidas:  %.2f - Cantidad: %d" % e.get_pizzas_producidas()
-    print "Promedio de Pizzas descartadas: %.2f - Cantidad: %d (%.2f%%)" %  e.get_pizzas_descartadas()
+    print "Promedio de Pizzas descartadas: %.2f - Cantidad: %d (%.2f%%)" % e.get_pizzas_descartadas()
     print "Promedio de llamados total: %.2f - Cantidad: %d" % e.get_llamados_total()
     print "Promedio de llamados atendidos: %.2f - Cantidad: %d (%.2f%%)" % e.get_llamados_atendidos()
     print "Promedio de llamados perdidos:  %.2f - Cantidad: %d (%.2f%%)" % e.get_llamados_perdidos()
     print "Promedio de llamados rechazados: %.2f - Cantidad: %d (%.2f%%)" % e.get_llamados_rechazados()
     print "\nOtras estadisticas"
-    print "Contenido de stock en camionetas: ", (np.sum(total_pizzas_producidas)+produccion_inicial) - np.sum(total_pizzas_descartadas) - np.sum(total_llamados_atendidos)
+    stock_restante = e.get_stock_restante()
+    print "Contenido de stock en camionetas: ", stock_restante
     print "Distancia recorridas (km) - Tiempo entre recargas (hs)"
     for c in camionetas:
-        print " %.2f - %.2f"  % (c.distancia_rec/1000, np.sum(c.tiempo_entre_rec)/60)
-    #plt.show()
+        print " (%d) %.2f - %.2f" % (c.id, c.distancia_rec/1000, np.sum(c.tiempo_entre_rec)/60)
+    e.set_posiciones(posiciones_x, posiciones_y)   
+    
+    detalle = {u'Anchoas': 0, u'Muzza': 0, u'Napolitana':0, u'Especial':0, u'Calabresa':0}
+    for p in pizzas_producidas:
+        detalle[p.gusto.nombre] += 1
+    e.mostrar_estadisticas(detalle.values())
+
 
 if __name__ == '__main__':
     main()
