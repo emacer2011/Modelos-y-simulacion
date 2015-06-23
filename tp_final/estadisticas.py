@@ -60,9 +60,12 @@ class Estadisticas(object):
 
     def mostrar_estadisticas(self, detalle):
         # Detalle de llamadas
-        p_atendidos = len(self.llamados_atendidos)/self.get_llamados_total()[1]
+        p_atendidos = self.get_llamados_atendidos()[2]
+        p_rechazados = self.get_llamados_rechazados()[2]
+        p_perdidos = self.get_llamados_perdidos()[2]
+    
         llamadas = [self.llamados_atendidos, self.llamados_rechazados, self.llamados_perdidos]
-        labels_llamadas = [u'Atendidas', u'Rechazadas', u'Perdidas']
+        labels_llamadas = [u'Atendidas %.2f %%' % p_atendidos, u'Rechazadas %.2f %%' % p_rechazados, u'Perdidas %.2f %%' % p_perdidos]
         plt.figure(facecolor='white')
         plt.subplot(2, 2, 1)
         plt.pie(llamadas, labels = labels_llamadas)  # Dibuja un gráfico de quesitos
