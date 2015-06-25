@@ -32,6 +32,7 @@ def eliminar_evento(eventos, evento):
     return eventos
 
 
+
 def crear_gustos():
     gustos = {}
     gustos[1] = Gusto('Anchoas', 0.10)
@@ -46,7 +47,7 @@ def crear_llamadas(gustos):
     llamadas = []
     reloj = 0
     for i in range(LLAMADAS):
-        hora = np.random.poisson(60/30)
+        hora = np.random.poisson(60/20)
         reloj += hora
         llamada = Llamada(reloj, get_gusto(gustos))
         posiciones_x.append(llamada.get_ubicacion()[0])
@@ -66,10 +67,12 @@ def crear_camionetas(gustos):
 
 
 def get_gusto(gustos):
-    for gusto in gustos.values():
-        if np.random.binomial(1, gusto.get_probabilidad()):
-            return gusto
-    return gustos[2]
+    key = 0
+    prob = 0
+    while not prob:
+        key = np.random.randint(1,len(gustos)+1)
+        prob = np.random.binomial(1, gustos[key].get_probabilidad())
+    return gustos[key]
 
 
 def crear_evento_llamada(eventos, llamadas):
@@ -104,7 +107,10 @@ def main():
     total_llamados_atendidos = []
     total_pizzas_producidas = []
     camionetas, producidas = crear_camionetas(gustos)
-    produccion_inicial = len(producidas)
+    produccion_inicial = producidas
+    tiene = 0
+    recarga = 0
+    cambia = 0
     for i in range(EXPERIMENTOS):
         llamados_perdidos = []
         llamados_rechazados = []
@@ -141,6 +147,7 @@ def main():
                                     if c.tiene_gusto(gusto):
                                         reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), llamado.get_hora()))
                                         nuevo_evento = Evento(c, reloj.get_reloj(), "atencion_pedido")
+                                        tiene += 1
                                         break
                                     else:
                                         if cambia_pedido():
@@ -149,10 +156,12 @@ def main():
                                             llamado.set_gusto(gusto)
                                             reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), llamado.get_hora()))
                                             nuevo_evento = Evento(c, reloj.get_reloj(), "atencion_pedido")
+                                            cambia += 1
                                             break
                                         else:
                                             t_viaje = c.tiempo_a_punto(0, 0)
                                             nuevo_evento = Evento(c, reloj.get_reloj()+t_viaje, "inicio_recarga")
+                                            recarga += 1
                                             break
                 elif eventos[k].tipo == "atencion_pedido":
                     c = eventos[k].objeto
@@ -199,18 +208,23 @@ def main():
             for c in camionetas:
                 print "camioneta %d %s " % (c.id, c.get_ocupado())
 
+        pizzas_producidas.extend(produccion_inicial)
         total_llamados_perdidos.append(len(llamados_perdidos))
         total_llamados_rechazados.append(len(llamados_rechazados))
-        total_pizzas_descartadas.append(len(pizzas_descartadas))
         total_llamados_atendidos.append(len(llamados_atendidos))
+        total_pizzas_descartadas.append(len(pizzas_descartadas))
         total_pizzas_producidas.append(len(pizzas_producidas))
+        #total_pizzas_producidas.append(produccion_inicial)
+
+    print total_pizzas_producidas
 
     e = Estadisticas()
-    e.set_produccion(produccion_inicial, total_pizzas_producidas, total_pizzas_descartadas)
+    e.set_produccion(total_pizzas_producidas, total_pizzas_descartadas)
     e.set_llamadas(total_llamados_atendidos, total_llamados_perdidos, total_llamados_rechazados)
 
 
     print "Resultados"
+    print "Tiene: %d, Recarga: %d, Cambia: %d" % (tiene, recarga, cambia)
     print "Promedio de Pizzas Producidas:  %.2f - Cantidad: %d" % e.get_pizzas_producidas()
     print "Promedio de Pizzas descartadas: %.2f - Cantidad: %d (%.2f%%)" % e.get_pizzas_descartadas()
     print "Promedio de llamados total: %.2f - Cantidad: %d" % e.get_llamados_total()

@@ -14,14 +14,14 @@ class Camioneta(object):
         self.ubicacion = (0, 0)
         self.distancia_rec = 0
         self.VC_MAX = 500  # mts/min = 30km/h
-        self.MAX_PIZZAS = 40
+        self.MAX_PIZZAS = 10
         self.llamada = None  # referencia al obj Llamada que atiende
         self.ultima_rec = 0
         if pizzas is None:
             self.pizzas = []
         if tiempo_entre_rec is None:
             self.tiempo_entre_rec = []
-        
+
     def get_ubicacion(self):
         return self.ubicacion
 
@@ -55,15 +55,34 @@ class Camioneta(object):
         self.pizzas = buenas
         return malas
 
+    # def cargar(self, gustos):
+    #     producidas = []
+    #     while len(self.pizzas) < self.MAX_PIZZAS:
+    #         key = np.random.randint(1, len(gustos))
+    #         prob = np.random.binomial(1, gustos[key].get_probabilidad())
+    #         if prob:
+    #             pizza = self.agregar_pizza(gustos[key])
+    #             producidas.append(pizza)
+    #     return producidas
+
+    def get_cant_gusto(self, gusto):
+        return len(filter((lambda p: p.gusto.nombre == gusto.nombre), self.pizzas))
+
     def cargar(self, gustos):
         producidas = []
-        while len(self.pizzas) < self.MAX_PIZZAS:
-            key = np.random.randint(1, len(gustos))
-            prob = np.random.binomial(1, gustos[key].get_probabilidad())
-            if prob:
-                pizza = self.agregar_pizza(gustos[key])
+        key = 0
+        prob = 0
+        for k, gusto in gustos.iteritems():
+            cant = self.get_cant_gusto(gusto) # cantidad de pizzas de gusto x
+            print gusto.nombre, gusto.get_probabilidad(), int(round(self.MAX_PIZZAS * gusto.get_probabilidad()) - cant)
+            faltan = int(round(self.MAX_PIZZAS * gusto.get_probabilidad()) - cant)
+            for i in range(faltan):
+                pizza = self.agregar_pizza(gustos[k])
                 producidas.append(pizza)
+        print "soy %d y cargue %d pizzas" % (self.id, len(self.pizzas))
         return producidas
+
+
 
     def recargar(self, gusto_principal, gustos, hora):
         """Devuelve el tiempo de carga, las pizzas en mal estado, las pizzas producidas"""

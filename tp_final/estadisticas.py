@@ -16,19 +16,18 @@ class Estadisticas(object):
         self.posiciones_x = None
         self.posiciones_y = None
 
-    def set_produccion(self, produccion_inicial, total_pizzas_producidas, total_pizzas_descartadas):
-        self.produccion_inicial = produccion_inicial
-        self.pizzas_producidas = total_pizzas_producidas
-        self.pizzas_descartadas = total_pizzas_descartadas
+    def set_produccion(self, pizzas_producidas, pizzas_descartadas):
+        self.pizzas_producidas = pizzas_producidas
+        self.pizzas_descartadas = pizzas_descartadas
 
     def get_pizzas_producidas(self):
         ''' devuelve promedio y total de Pizzas producidas '''
-        return np.average(self.pizzas_producidas), np.sum(self.pizzas_producidas) + self.produccion_inicial
+        return np.average(self.pizzas_producidas), np.sum(self.pizzas_producidas)
 
 
     def get_pizzas_descartadas(self):
         ''' devuelve promedio, total de Pizzas descartadas y Porcentaje sobre el total de Producidas '''
-        return np.average(self.pizzas_descartadas) , np.sum(self.pizzas_descartadas), (np.sum(self.pizzas_descartadas)/(np.sum(self.pizzas_producidas)+self.produccion_inicial))*100
+        return np.average(self.pizzas_descartadas) , np.sum(self.pizzas_descartadas), (np.sum(self.pizzas_descartadas)/(np.sum(self.pizzas_producidas))*100)
 
     def set_llamadas(self, total_llamados_atendidos, total_llamados_perdidos, total_llamados_rechazados):
         self.llamados_atendidos = total_llamados_atendidos
@@ -52,7 +51,7 @@ class Estadisticas(object):
         return (np.average(self.llamados_rechazados) , np.sum(self.llamados_rechazados), np.sum(self.llamados_rechazados) / self.get_llamados_total()[1]*100)
 
     def get_stock_restante(self):
-        return (np.sum(self.pizzas_producidas)+self.produccion_inicial) - np.sum(self.pizzas_descartadas) - np.sum(self.llamados_atendidos)
+        return (np.sum(self.pizzas_producidas)) - np.sum(self.pizzas_descartadas) - np.sum(self.llamados_atendidos)
 
     def set_posiciones(self, x, y):
         self.posiciones_x = x
@@ -100,7 +99,7 @@ class Estadisticas(object):
         plt.subplot(2, 2, 4)
         porcentajes = [] 
         for i in range(len(detalle)):
-            porcentajes.append(detalle[i]/self.pizzas_producidas[0]*100)
+            porcentajes.append(detalle[i]/self.get_pizzas_producidas()[1]*100)
         labels_gustos = [u'Anchoas %.2f %%' % porcentajes[0],
                         u'Muzza %.2f %%' % porcentajes[1] , 
                         u'Napolitana %.2f %%' % porcentajes[2], 
