@@ -14,7 +14,7 @@ class Camioneta(object):
         self.ubicacion = (0, 0)
         self.distancia_rec = 0
         self.VC_MAX = 500  # mts/min = 30km/h
-        self.MAX_PIZZAS = 10
+        self.MAX_PIZZAS = 40
         self.llamada = None  # referencia al obj Llamada que atiende
         self.ultima_rec = 0
         if pizzas is None:

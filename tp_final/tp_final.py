@@ -10,8 +10,8 @@ from reloj import *
 from camioneta import Camioneta
 from estadisticas import Estadisticas
 
-CORRIDAS = 1
-EXPERIMENTOS = 1
+CORRIDAS = 10
+EXPERIMENTOS = 20
 LLAMADAS = 200
 MAX_DISTANCIA = 2000
 MAX_CAMIONETAS = 4
@@ -152,12 +152,19 @@ def main():
                                     else:
                                         if cambia_pedido():
                                             gustos_disponibles = c.get_gustos()
-                                            gusto = gustos_disponibles[0]
-                                            llamado.set_gusto(gusto)
-                                            reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), llamado.get_hora()))
-                                            nuevo_evento = Evento(c, reloj.get_reloj(), "atencion_pedido")
-                                            cambia += 1
-                                            break
+                                            print gustos_disponibles
+                                            if len(gustos_disponibles) > 0:
+                                                gusto = gustos_disponibles[0]
+                                                llamado.set_gusto(gusto)
+                                                reloj.set_reloj(avanzar_reloj(reloj.get_reloj(), llamado.get_hora()))
+                                                nuevo_evento = Evento(c, reloj.get_reloj(), "atencion_pedido")
+                                                cambia += 1
+                                                break
+                                            else:
+                                                t_viaje = c.tiempo_a_punto(0, 0)
+                                                nuevo_evento = Evento(c, reloj.get_reloj()+t_viaje, "inicio_recarga")
+                                                recarga += 1
+                                                break
                                         else:
                                             t_viaje = c.tiempo_a_punto(0, 0)
                                             nuevo_evento = Evento(c, reloj.get_reloj()+t_viaje, "inicio_recarga")
