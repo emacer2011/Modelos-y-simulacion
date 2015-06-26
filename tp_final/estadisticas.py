@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 class Estadisticas(object):
 
     def __init__(self):
-        self.produccion_inicial = 0
+        #self.produccion_inicial = 0
         self.pizzas_producidas = 0
         self.pizzas_descartadas = 0
         self.llamados_atendidos = 0
@@ -16,19 +16,19 @@ class Estadisticas(object):
         self.posiciones_x = None
         self.posiciones_y = None
 
-    def set_produccion(self, produccion_inicial, total_pizzas_producidas, total_pizzas_descartadas):
-        self.produccion_inicial = produccion_inicial
+    def set_produccion(self, total_pizzas_producidas, total_pizzas_descartadas):
+        #self.produccion_inicial = produccion_inicial
         self.pizzas_producidas = total_pizzas_producidas
         self.pizzas_descartadas = total_pizzas_descartadas
 
     def get_pizzas_producidas(self):
         ''' devuelve promedio y total de Pizzas producidas '''
-        return np.average(self.pizzas_producidas), np.sum(self.pizzas_producidas) + self.produccion_inicial
+        return np.average(self.pizzas_producidas), np.sum(self.pizzas_producidas) #+ self.produccion_inicial
 
 
     def get_pizzas_descartadas(self):
         ''' devuelve promedio, total de Pizzas descartadas y Porcentaje sobre el total de Producidas '''
-        return np.average(self.pizzas_descartadas) , np.sum(self.pizzas_descartadas), (np.sum(self.pizzas_descartadas)/(np.sum(self.pizzas_producidas)+self.produccion_inicial))*100
+        return np.average(self.pizzas_descartadas) , np.sum(self.pizzas_descartadas), (np.sum(self.pizzas_descartadas)/(np.sum(self.pizzas_producidas)))*100
 
     def set_llamadas(self, total_llamados_atendidos, total_llamados_perdidos, total_llamados_rechazados):
         self.llamados_atendidos = total_llamados_atendidos
@@ -52,13 +52,13 @@ class Estadisticas(object):
         return (np.average(self.llamados_rechazados) , np.sum(self.llamados_rechazados), np.sum(self.llamados_rechazados) / self.get_llamados_total()[1]*100)
 
     def get_stock_restante(self):
-        return (np.sum(self.pizzas_producidas)+self.produccion_inicial) - np.sum(self.pizzas_descartadas) - np.sum(self.llamados_atendidos)
+        return (np.sum(self.pizzas_producidas)) - np.sum(self.pizzas_descartadas) - np.sum(self.llamados_atendidos)
 
     def set_posiciones(self, x, y):
         self.posiciones_x = x
         self.posiciones_y = y
 
-    def mostrar_estadisticas(self, detalle):
+    def mostrar_estadisticas(self, detalle_prod, detalle_desc):
         # Detalle de llamadas
         p_atendidos = self.get_llamados_atendidos()[2]
         p_rechazados = self.get_llamados_rechazados()[2]
@@ -75,38 +75,55 @@ class Estadisticas(object):
         # Estado de las pizzas
         plt.subplot(2, 2, 2)
         stock_restante = self.get_stock_restante()
-        pizzas = [self.get_llamados_atendidos()[1], self.pizzas_descartadas[0], stock_restante ]
-        entregadas = self.get_llamados_atendidos()[1]/self.get_pizzas_producidas()[1]
-        stock_restante = stock_restante/self.get_pizzas_producidas()[1]*100
         descartadas = self.get_pizzas_descartadas()[2]
+        pizzas = [self.get_llamados_atendidos()[1], descartadas, stock_restante ]
+        entregadas = self.get_llamados_atendidos()[1]/self.get_pizzas_producidas()[1]
+        descartadas = self.get_pizzas_descartadas()[2]/self.get_pizzas_producidas()[1]
+        stock_restante = stock_restante/self.get_pizzas_producidas()[1]*100
         labels_pizzas = [u'Entregadas %.2f %%' % (entregadas*100), 
-                        u'Descartadas %.2f %%' % (descartadas), 
+                        u'Descartadas %.2f %%' % (descartadas*100), 
                         u'En stock %.2f %%' % (stock_restante)]
         plt.pie(pizzas, labels = labels_pizzas)
         plt.title(u'Porcentaje de pizzas (Gral.)')
 
+        
+        # Detalle de produccion de pizzas
+        plt.subplot(2, 2, 3)
+        porcentajes = [] 
+        labels_gustos = []
+        for k, v in detalle_prod.iteritems():
+            porcentaje =  v/self.get_pizzas_producidas()[1]*100
+            labels_gustos.append('%s %.2f %%' % (k, porcentaje)),
+        plt.pie(detalle_prod.values(), labels = labels_gustos)
+        plt.title(u'Detalle de pizzas producidas')
+        
+        
+        plt.subplot(2, 2, 4)
+        d_anchoas = detalle_desc['Anchoas']
+        d_calabresa = detalle_desc['Calabresa']
+        d_napolitana = detalle_desc['Napolitana']
+        d_especial = detalle_desc['Especial']
+        d_muzza = detalle_desc['Muzza']
+        pizzas = [d_anchoas, d_napolitana, d_calabresa, d_muzza, d_especial]
+    
+        labels_pizzas = [u'D-Anchoas %.2f %%' % (d_anchoas/self.get_pizzas_descartadas()[1]*100),
+                        u'D-Napolitana %.2f %%' % (d_napolitana/self.get_pizzas_descartadas()[1]*100),
+                        u'D-Calabresa %.2f %%' % (d_calabresa/self.get_pizzas_descartadas()[1]*100),
+                        u'D-Muzza %.2f %%' % (d_muzza/self.get_pizzas_descartadas()[1]*100), 
+                        u'D-Especial %.2f %%' % (d_especial/self.get_pizzas_descartadas()[1]*100)]
+        plt.pie(pizzas, labels = labels_pizzas)
+        plt.title(u'Porcentaje de descartes')
+        plt.show()
+
+        
+
 
         # Dispersion de llamadas
-        plt.subplot(2, 2, 3)
+        #plt.subplot(2, 2, 3)
         x = np.array(self.posiciones_x)
         y = np.array(self.posiciones_y)
         plt.grid(True)
         plt.scatter(x,y)
         plt.scatter(0,0, color="red")
         plt.title(u'Dispersion de llamadas')
-
-
-        # Detalle de produccion de pizzas
-        plt.subplot(2, 2, 4)
-        porcentajes = [] 
-        for i in range(len(detalle)):
-            porcentajes.append(detalle[i]/self.pizzas_producidas[0]*100)
-        labels_gustos = [u'Anchoas %.2f %%' % porcentajes[0],
-                        u'Muzza %.2f %%' % porcentajes[1] , 
-                        u'Napolitana %.2f %%' % porcentajes[2], 
-                        u'Especial %.2f %%' % porcentajes[3], 
-                        u'Calabresa %.2f %%' % porcentajes[4]]
-        plt.pie(detalle, labels = labels_gustos)
-        plt.title(u'Detalle de pizzas producidas')
-        
         plt.show()

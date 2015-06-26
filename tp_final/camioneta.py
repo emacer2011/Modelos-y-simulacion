@@ -60,7 +60,7 @@ class Camioneta(object):
         while len(self.pizzas) < self.MAX_PIZZAS:
             key = np.random.randint(1, len(gustos))
             prob = np.random.binomial(1, gustos[key].get_probabilidad())
-            if prob:
+            if prob == 1:
                 pizza = self.agregar_pizza(gustos[key])
                 producidas.append(pizza)
         return producidas

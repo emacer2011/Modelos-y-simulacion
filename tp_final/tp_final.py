@@ -34,11 +34,11 @@ def eliminar_evento(eventos, evento):
 
 def crear_gustos():
     gustos = {}
-    gustos[1] = Gusto('Anchoas', 0.10)
-    gustos[2] = Gusto('Muzza', 0.25)
-    gustos[3] = Gusto('Napolitana', 0.22)
-    gustos[4] = Gusto('Especial', 0.23)
-    gustos[5] = Gusto('Calabresa', 0.15)
+    gustos[1] = Gusto('Muzza', 0.2)
+    gustos[2] = Gusto('Especial', 0.25)
+    gustos[3] = Gusto('Napolitana', 0.17)
+    gustos[4] = Gusto('Calabresa', 0.23)
+    gustos[5] = Gusto('Anchoas', 0.15)
     return gustos
 
 
@@ -66,10 +66,12 @@ def crear_camionetas(gustos):
 
 
 def get_gusto(gustos):
-    for gusto in gustos.values():
-        if np.random.binomial(1, gusto.get_probabilidad()):
-            return gusto
-    return gustos[2]
+    key = 0
+    prob = 0
+    while not prob:
+        key = np.random.random_integers(1, len(gustos))
+        prob = np.random.binomial(1, gustos[key].get_probabilidad())
+    return gustos[key]
 
 
 def crear_evento_llamada(eventos, llamadas):
@@ -104,7 +106,7 @@ def main():
     total_llamados_atendidos = []
     total_pizzas_producidas = []
     camionetas, producidas = crear_camionetas(gustos)
-    produccion_inicial = len(producidas)
+    produccion_inicial = producidas
     for i in range(EXPERIMENTOS):
         llamados_perdidos = []
         llamados_rechazados = []
@@ -203,10 +205,14 @@ def main():
         total_llamados_rechazados.append(len(llamados_rechazados))
         total_pizzas_descartadas.append(len(pizzas_descartadas))
         total_llamados_atendidos.append(len(llamados_atendidos))
+        pizzas_producidas.extend(produccion_inicial)
         total_pizzas_producidas.append(len(pizzas_producidas))
 
+    for gusto in gustos:
+        print len(filter((lambda p: p.gusto.nombre == gustos[gusto].nombre), pizzas_producidas)), gustos[gusto].nombre
+
     e = Estadisticas()
-    e.set_produccion(produccion_inicial, total_pizzas_producidas, total_pizzas_descartadas)
+    e.set_produccion(total_pizzas_producidas, total_pizzas_descartadas)
     e.set_llamadas(total_llamados_atendidos, total_llamados_perdidos, total_llamados_rechazados)
 
 
@@ -225,10 +231,13 @@ def main():
         print " (%d) %.2f - %.2f" % (c.id, c.distancia_rec/1000, np.sum(c.tiempo_entre_rec)/60)
     e.set_posiciones(posiciones_x, posiciones_y)   
     
-    detalle = {u'Anchoas': 0, u'Muzza': 0, u'Napolitana':0, u'Especial':0, u'Calabresa':0}
+    detalle_prod = {'Anchoas': 0, 'Muzza': 0, 'Napolitana':0, 'Especial':0, 'Calabresa':0}
+    detalle_desc = {'Anchoas': 0, 'Muzza': 0, 'Napolitana':0, 'Especial':0, 'Calabresa':0}
     for p in pizzas_producidas:
-        detalle[p.gusto.nombre] += 1
-    e.mostrar_estadisticas(detalle.values())
+        detalle_prod[p.gusto.nombre] += 1
+    for p in pizzas_descartadas:
+        detalle_desc[p.gusto.nombre] += 1
+    e.mostrar_estadisticas(detalle_prod, detalle_desc)
 
 
 if __name__ == '__main__':
