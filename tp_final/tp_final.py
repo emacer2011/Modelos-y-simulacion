@@ -10,8 +10,8 @@ from reloj import *
 from camioneta import Camioneta
 from estadisticas import Estadisticas
 
-CORRIDAS = 1
-EXPERIMENTOS = 1
+CORRIDAS = 10
+EXPERIMENTOS = 20
 LLAMADAS = 200
 MAX_DISTANCIA = 2000
 MAX_CAMIONETAS = 4
@@ -107,6 +107,8 @@ def main():
     total_pizzas_producidas = []
     camionetas, producidas = crear_camionetas(gustos)
     produccion_inicial = producidas
+    detalle_prod = {'Anchoas': 0, 'Muzza': 0, 'Napolitana':0, 'Especial':0, 'Calabresa':0}
+    detalle_desc = {'Anchoas': 0, 'Muzza': 0, 'Napolitana':0, 'Especial':0, 'Calabresa':0}
     for i in range(EXPERIMENTOS):
         llamados_perdidos = []
         llamados_rechazados = []
@@ -197,9 +199,10 @@ def main():
                     k = 0
                 else:
                     k += 1
-
-            for c in camionetas:
-                print "camioneta %d %s " % (c.id, c.get_ocupado())
+        for p in pizzas_producidas:
+            detalle_prod[p.gusto.nombre] += 1
+        for p in pizzas_descartadas:
+            detalle_desc[p.gusto.nombre] += 1
 
         total_llamados_perdidos.append(len(llamados_perdidos))
         total_llamados_rechazados.append(len(llamados_rechazados))
@@ -207,9 +210,6 @@ def main():
         total_llamados_atendidos.append(len(llamados_atendidos))
         pizzas_producidas.extend(produccion_inicial)
         total_pizzas_producidas.append(len(pizzas_producidas))
-
-    for gusto in gustos:
-        print len(filter((lambda p: p.gusto.nombre == gustos[gusto].nombre), pizzas_producidas)), gustos[gusto].nombre
 
     e = Estadisticas()
     e.set_produccion(total_pizzas_producidas, total_pizzas_descartadas)
@@ -230,13 +230,6 @@ def main():
     for c in camionetas:
         print " (%d) %.2f - %.2f" % (c.id, c.distancia_rec/1000, np.sum(c.tiempo_entre_rec)/60)
     e.set_posiciones(posiciones_x, posiciones_y)   
-    
-    detalle_prod = {'Anchoas': 0, 'Muzza': 0, 'Napolitana':0, 'Especial':0, 'Calabresa':0}
-    detalle_desc = {'Anchoas': 0, 'Muzza': 0, 'Napolitana':0, 'Especial':0, 'Calabresa':0}
-    for p in pizzas_producidas:
-        detalle_prod[p.gusto.nombre] += 1
-    for p in pizzas_descartadas:
-        detalle_desc[p.gusto.nombre] += 1
     e.mostrar_estadisticas(detalle_prod, detalle_desc)
 
 

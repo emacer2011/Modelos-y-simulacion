@@ -65,18 +65,16 @@ class Estadisticas(object):
         p_atendidos = self.get_llamados_atendidos()[2]
         p_rechazados = self.get_llamados_rechazados()[2]
         p_perdidos = self.get_llamados_perdidos()[2]
-        fig = plt.figure(facecolor='white')
-        llamadas = [self.llamados_atendidos, self.llamados_rechazados, self.llamados_perdidos]
+        llamadas = [self.get_llamados_atendidos()[1], self.get_llamados_rechazados()[1], self.get_llamados_perdidos()[1]]
         labels_llamadas = [u'Atendidas %.2f %%' % p_atendidos, u'Rechazadas %.2f %%' % p_rechazados, u'Perdidas %.2f %%' % p_perdidos]
         plt.figure(facecolor='white')
         plt.subplot(2, 2, 1)
         plt.pie(llamadas, labels = labels_llamadas)  # Dibuja un gráfico de quesitos
         plt.title(u'Porcentaje de llamadas')
-        plt.savefig('fig0.png')
+        #plt.savefig('fig0.png')
 
         
         # Estado de las pizzas
-        plt.clf()
         plt.subplot(2, 2, 2)
         stock_restante = self.get_stock_restante()
         descartadas = self.get_pizzas_descartadas()[1]
@@ -89,10 +87,9 @@ class Estadisticas(object):
                         u'En stock %.2f %%' % (stock_restante)]
         plt.pie(pizzas, labels = labels_pizzas)
         plt.title(u'Porcentaje de pizzas (Gral.)')
-        plt.savefig('fig1.png')
+        #plt.savefig('fig1.png')
 
         # Detalle de produccion de pizzas
-        plt.clf()
         plt.subplot(2, 2, 3)
         porcentajes = [] 
         labels_gustos = []
@@ -101,34 +98,31 @@ class Estadisticas(object):
             labels_gustos.append('%s %.2f %%' % (k, porcentaje)),
         plt.pie(detalle_prod.values(), labels = labels_gustos)
         plt.title(u'Detalle de pizzas producidas')
-        plt.savefig('fig2.png')
+        #plt.savefig('fig2.png')
         
         
-        plt.clf()
+        
         plt.subplot(2, 2, 4)
         d_anchoas = detalle_desc['Anchoas']
         d_calabresa = detalle_desc['Calabresa']
         d_napolitana = detalle_desc['Napolitana']
         d_especial = detalle_desc['Especial']
         d_muzza = detalle_desc['Muzza']
-        pizzas = [d_anchoas, d_napolitana, d_calabresa, d_muzza, d_especial]
-    
+        pizzas = [d_anchoas, d_muzza, d_napolitana, d_especial, d_calabresa]
         labels_pizzas = [u'Anchoas %.2f %%' % (d_anchoas/self.get_pizzas_descartadas()[1]*100),
-                        u'Napolitana %.2f %%' % (d_napolitana/self.get_pizzas_descartadas()[1]*100),
-                        u'Calabresa %.2f %%' % (d_calabresa/self.get_pizzas_descartadas()[1]*100),
                         u'Muzza %.2f %%' % (d_muzza/self.get_pizzas_descartadas()[1]*100), 
-                        u'Especial %.2f %%' % (d_especial/self.get_pizzas_descartadas()[1]*100)]
+                        u'Napolitana %.2f %%' % (d_napolitana/self.get_pizzas_descartadas()[1]*100),
+                        u'Especial %.2f %%' % (d_especial/self.get_pizzas_descartadas()[1]*100),
+                        u'Calabresa %.2f %%' % (d_calabresa/self.get_pizzas_descartadas()[1]*100)]
         plt.pie(pizzas, labels = labels_pizzas)
         plt.title(u'Porcentaje de descartes')
-        plt.savefig('fig3.png')
-        #plt.show()
+        #plt.savefig('fig3.png')
+        plt.show()
 
         
 
 
         # Dispersion de llamadas
-        plt.clf()
-        plt.subplot(2, 2, 1)
         x = np.array(self.posiciones_x)
         y = np.array(self.posiciones_y)
         plt.grid(True)
@@ -136,4 +130,4 @@ class Estadisticas(object):
         plt.scatter(0,0, color="red")
         plt.title(u'Dispersion de llamadas')
         plt.savefig('fig4.png')
-        #plt.show()
+        plt.show()
